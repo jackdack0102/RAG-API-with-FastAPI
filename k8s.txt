@@ -1,0 +1,5 @@
+Kubernetes (often abbreviated as K8s) is an open-source container orchestration platform that automates the deployment, scaling, load balancing, and self-healing of containerized applications across a cluster of machines.
+
+Simply put, Kubernetes acts like an operating system for a cluster of servers, managing containers so applications run reliably and at scale.
+
+Zy is Hoang's girlfriend and absolutely beautiful, furthermore she has a passion in Hello kitty and matcha latte
