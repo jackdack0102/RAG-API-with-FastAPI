@@ -1,0 +1,64 @@
+name: RAG CI Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - 'app.py'
+      - 'embed.py'
+      - 'k8s.txt'
+      - 'deployment.yaml'
+      - 'service.yaml'
+      - 'README.MD'
+      - 'segimantic_test.py'
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    services:
+      chromadb:
+        image: "ghcr.io/chroma-core/chroma:latest"
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install Python dependencies
+        run: |
+          pip install fastapi uvicorn chromadb ollama requests pytest
+
+      - name: Run embed pre-processing
+        run: python embed.py
+
+      - name: Static lint (optional)
+        run: |
+          python -m py_compile app.py embed.py
+
+      - name: Run pytest
+        run: pytest -q
+
+      - name: Build Docker image
+        run: docker build --pull --no-cache -t rag-api:ci .
+
+      - name: Run container smoke test
+        run: |
+          docker run -d --name rag-api-ci -p 8000:8000 rag-api:ci
+          sleep 8
+          curl -f http://127.0.0.1:8000/docs || exit 1
+          docker stop rag-api-ci
+          docker rm rag-api-ci
+
+        
